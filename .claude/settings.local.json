@@ -5,7 +5,10 @@
       "Bash(Remove-Item -Recurse -Force .next -ErrorAction SilentlyContinue)",
       "Bash(Write-Host \"Cache cleared\")",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(npm install:*)",
+      "Bash(vercel env:*)",
+      "Bash(git push)"
     ]
   }
 }
