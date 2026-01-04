@@ -33,7 +33,16 @@ export default function AuthGate(props: {
       }
 
       if (mode === 'signup') {
-        const { error } = await supabase.auth.signUp({ email, password })
+        const derivedUsername = email.split('@')[0].trim()
+
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: { username: derivedUsername }, // <-- IMPORTANT pour ton trigger
+          },
+        })
+
         if (error) throw error
         setMsg('Compte cree. Passe en Connexion.')
         setMode('login')

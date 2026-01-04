@@ -5,6 +5,17 @@ import { createClient } from '@/lib/supabase/browser'
 import AuthGate from '@/app/components/AuthGate'
 import { useSearchParams } from 'next/navigation'
 
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false)
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
+  return isMobile
+}
+
 const tiers = [
   { id: 'essential', name: 'Essential', price: 10, image: '/card-essential.png', color: '#F6C744', count: 5 },
   { id: 'premium', name: 'Premium', price: 20, image: '/card-premium.png', color: '#FF8C42', count: 10 },
@@ -46,6 +57,7 @@ async function getSignedUrl(tier: TierId, n: number, weekId: string): Promise<st
 function OffersContent() {
   const supabase = useMemo(() => createClient(), [])
   const searchParams = useSearchParams()
+  const isMobile = useIsMobile()
 
   const [selected, setSelected] = useState<TierId>('exclusive')
   const [authOpen, setAuthOpen] = useState(false)
@@ -268,14 +280,16 @@ function OffersContent() {
   function PackCard({ tier }: { tier: typeof tiers[number] }) {
     const purchased = currentWeek ? isPurchased(tier.id, currentWeek.id) : false
     const selectedNow = selected === tier.id
+    const cardWidth = isMobile ? 120 : 180
+    const cardHeight = isMobile ? 180 : 270
     return (
       <div
         onClick={() => !purchased && setSelected(tier.id)}
         style={{
           cursor: purchased ? 'not-allowed' : 'pointer',
           border: selectedNow ? `3px solid ${tier.color}` : '3px solid transparent',
-          borderRadius: 16, overflow: 'hidden',
-          boxShadow: selectedNow ? `0 0 40px ${tier.color}` : 'none',
+          borderRadius: isMobile ? 12 : 16, overflow: 'hidden',
+          boxShadow: selectedNow ? `0 0 ${isMobile ? 25 : 40}px ${tier.color}` : 'none',
           transition: 'all 0.25s ease',
           transform: selectedNow ? 'scale(1.05)' : 'scale(0.95)',
           opacity: purchased ? 0.35 : selectedNow ? 1 : 0.6,
@@ -283,9 +297,9 @@ function OffersContent() {
           position: 'relative', userSelect: 'none',
         }}
       >
-        <img src={tier.image} alt={tier.name} draggable={false} onContextMenu={e => e.preventDefault()} style={{ width: 180, height: 270, objectFit: 'cover', display: 'block', pointerEvents: 'none' }} />
-        <div style={{ textAlign: 'center', padding: 10, background: '#1a1a1a', color: selectedNow ? tier.color : 'white', fontWeight: 'bold', fontSize: 18 }}>{tier.price}€ - {tier.count} items</div>
-        {purchased && <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.25)', color: 'white', fontWeight: 'bold', letterSpacing: 2 }}>DEJA ACHETE</div>}
+        <img src={tier.image} alt={tier.name} draggable={false} onContextMenu={e => e.preventDefault()} style={{ width: cardWidth, height: cardHeight, objectFit: 'cover', display: 'block', pointerEvents: 'none' }} />
+        <div style={{ textAlign: 'center', padding: isMobile ? 6 : 10, background: '#1a1a1a', color: selectedNow ? tier.color : 'white', fontWeight: 'bold', fontSize: isMobile ? 12 : 18 }}>{tier.price}€ - {tier.count} items</div>
+        {purchased && <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.25)', color: 'white', fontWeight: 'bold', letterSpacing: isMobile ? 1 : 2, fontSize: isMobile ? 10 : 14 }}>DEJA ACHETE</div>}
       </div>
     )
   }
@@ -312,11 +326,11 @@ function OffersContent() {
 
       <div style={{ position: 'relative', zIndex: 1, maxWidth: 1200, margin: '0 auto' }}>
         {/* HEADER */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 26 }}>
-          <h1 style={{ fontSize: 24, fontWeight: 'bold', letterSpacing: 4, background: 'linear-gradient(90deg, #F6C744, #FF8C42, #E84A5F)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>MYPLATFORM</h1>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <button onClick={() => requireAuth(() => { setShowCollection(true); if (currentWeek) setCollectionWeek(currentWeek.id) })} style={{ padding: '10px 18px', background: 'transparent', border: '2px solid #ffffff30', borderRadius: 25, color: 'white', fontSize: 14, cursor: 'pointer' }}>Ma collection</button>
-            <button onClick={() => isAuthed ? setShowAccount(true) : setAuthOpen(true)} style={{ padding: '10px 18px', background: isAuthed ? 'rgba(255,255,255,0.08)' : 'linear-gradient(135deg, #E84A5F, #FF8C42)', border: isAuthed ? '1px solid rgba(255,255,255,0.2)' : 'none', borderRadius: 25, color: 'white', fontSize: 14, cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: isMobile ? 16 : 26, gap: isMobile ? 12 : 0 }}>
+          <h1 style={{ fontSize: isMobile ? 20 : 24, fontWeight: 'bold', letterSpacing: 4, background: 'linear-gradient(90deg, #F6C744, #FF8C42, #E84A5F)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>MYPLATFORM</h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <button onClick={() => requireAuth(() => { setShowCollection(true); if (currentWeek) setCollectionWeek(currentWeek.id) })} style={{ padding: isMobile ? '8px 14px' : '10px 18px', background: 'transparent', border: '2px solid #ffffff30', borderRadius: 25, color: 'white', fontSize: isMobile ? 12 : 14, cursor: 'pointer' }}>Ma collection</button>
+            <button onClick={() => isAuthed ? setShowAccount(true) : setAuthOpen(true)} style={{ padding: isMobile ? '8px 14px' : '10px 18px', background: isAuthed ? 'rgba(255,255,255,0.08)' : 'linear-gradient(135deg, #E84A5F, #FF8C42)', border: isAuthed ? '1px solid rgba(255,255,255,0.2)' : 'none', borderRadius: 25, color: 'white', fontSize: isMobile ? 12 : 14, cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: 8 }}>
               {isAuthed ? <><span style={{ width: 8, height: 8, borderRadius: '50%', background: '#4ade80' }} />{username || 'Compte'}</> : 'Creer un compte'}
             </button>
           </div>
@@ -330,10 +344,10 @@ function OffersContent() {
         )}
 
         {/* WHEEL */}
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 28 }}>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: isMobile ? 20 : 28 }}>
           <div style={{ position: 'relative' }}>
-            <div style={{ position: 'absolute', inset: -18, background: selectedColor, opacity: 0.35, filter: 'blur(40px)', borderRadius: '50%' }} />
-            <svg width="320" height="320" viewBox="0 0 500 500" style={{ position: 'relative', transform: `rotate(${rotation}deg)`, transition: isSpinning ? 'transform 2.8s cubic-bezier(0.2, 0.8, 0.2, 1)' : 'transform 0.25s ease-out', filter: `drop-shadow(0 0 20px ${selectedColor})` }}>
+            <div style={{ position: 'absolute', inset: isMobile ? -12 : -18, background: selectedColor, opacity: 0.35, filter: 'blur(40px)', borderRadius: '50%' }} />
+            <svg width={isMobile ? 220 : 320} height={isMobile ? 220 : 320} viewBox="0 0 500 500" style={{ position: 'relative', transform: `rotate(${rotation}deg)`, transition: isSpinning ? 'transform 2.8s cubic-bezier(0.2, 0.8, 0.2, 1)' : 'transform 0.25s ease-out', filter: `drop-shadow(0 0 20px ${selectedColor})` }}>
               {Array.from({ length: 8 }).map((_, i) => {
                 const a = 45, s = i * a - 90, sr = s * Math.PI / 180, er = (s + a) * Math.PI / 180
                 const x1 = 250 + 240 * Math.cos(sr), y1 = 250 + 240 * Math.sin(sr), x2 = 250 + 240 * Math.cos(er), y2 = 250 + 240 * Math.sin(er)
@@ -343,57 +357,57 @@ function OffersContent() {
               <text x="250" y="245" fill={selectedColor} fontSize="22" fontWeight="bold" textAnchor="middle">{selectedTier.price}€</text>
               <text x="250" y="268" fill="#888" fontSize="11" textAnchor="middle">{selectedTier.name}</text>
             </svg>
-            <div style={{ position: 'absolute', top: '50%', right: -10, transform: 'translateY(-50%)', width: 0, height: 0, borderTop: '14px solid transparent', borderBottom: '14px solid transparent', borderRight: `24px solid ${selectedColor}` }} />
+            <div style={{ position: 'absolute', top: '50%', right: isMobile ? -6 : -10, transform: 'translateY(-50%)', width: 0, height: 0, borderTop: `${isMobile ? 10 : 14}px solid transparent`, borderBottom: `${isMobile ? 10 : 14}px solid transparent`, borderRight: `${isMobile ? 18 : 24}px solid ${selectedColor}` }} />
           </div>
         </div>
 
         {/* PACKS */}
-        <div style={{ textAlign: 'center', marginBottom: 14 }}><p style={{ color: 'rgba(255,255,255,0.55)', letterSpacing: 2, fontSize: 13 }}>SELECTIONNEZ VOTRE PACK</p></div>
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 22, flexWrap: 'wrap', marginBottom: 20 }}>{tiers.map(t => <PackCard key={t.id} tier={t} />)}</div>
+        <div style={{ textAlign: 'center', marginBottom: isMobile ? 10 : 14 }}><p style={{ color: 'rgba(255,255,255,0.55)', letterSpacing: 2, fontSize: isMobile ? 11 : 13 }}>SELECTIONNEZ VOTRE PACK</p></div>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: isMobile ? 10 : 22, flexWrap: 'wrap', marginBottom: isMobile ? 14 : 20 }}>{tiers.map(t => <PackCard key={t.id} tier={t} />)}</div>
 
         {/* CTA */}
-        <div style={{ textAlign: 'center', marginTop: 10 }}>
-          <button onClick={clickDebloquer} disabled={(currentWeek && isPurchased(selected, currentWeek.id)) || isSpinning} style={{ background: (currentWeek && isPurchased(selected, currentWeek.id)) ? 'rgba(255,255,255,0.08)' : `linear-gradient(135deg, ${selectedColor}, ${selectedColor}cc)`, color: (currentWeek && isPurchased(selected, currentWeek.id)) ? 'rgba(255,255,255,0.5)' : 'black', padding: '15px 46px', borderRadius: 30, border: 'none', fontSize: 18, fontWeight: 'bold', cursor: (currentWeek && isPurchased(selected, currentWeek.id)) || isSpinning ? 'not-allowed' : 'pointer', boxShadow: (currentWeek && isPurchased(selected, currentWeek.id)) || isSpinning ? 'none' : `0 0 30px ${selectedColor}50`, opacity: isSpinning ? 0.7 : 1 }}>
+        <div style={{ textAlign: 'center', marginTop: isMobile ? 6 : 10 }}>
+          <button onClick={clickDebloquer} disabled={(currentWeek && isPurchased(selected, currentWeek.id)) || isSpinning} style={{ background: (currentWeek && isPurchased(selected, currentWeek.id)) ? 'rgba(255,255,255,0.08)' : `linear-gradient(135deg, ${selectedColor}, ${selectedColor}cc)`, color: (currentWeek && isPurchased(selected, currentWeek.id)) ? 'rgba(255,255,255,0.5)' : 'black', padding: isMobile ? '12px 32px' : '15px 46px', borderRadius: 30, border: 'none', fontSize: isMobile ? 14 : 18, fontWeight: 'bold', cursor: (currentWeek && isPurchased(selected, currentWeek.id)) || isSpinning ? 'not-allowed' : 'pointer', boxShadow: (currentWeek && isPurchased(selected, currentWeek.id)) || isSpinning ? 'none' : `0 0 30px ${selectedColor}50`, opacity: isSpinning ? 0.7 : 1 }}>
             {(currentWeek && isPurchased(selected, currentWeek.id)) ? 'Deja achete' : isSpinning ? 'Patiente...' : `Debloquer ${selectedTier.count} medias`}
           </button>
-          <p style={{ color: 'rgba(255,255,255,0.35)', marginTop: 12, fontSize: 12 }}>Paiement unique - Acces permanent - 18+</p>
+          <p style={{ color: 'rgba(255,255,255,0.35)', marginTop: isMobile ? 8 : 12, fontSize: isMobile ? 10 : 12 }}>Paiement unique - Acces permanent - 18+</p>
         </div>
       </div>
 
       {/* PAYMENT POPUP */}
       {showPayment && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.82)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 300, padding: 16 }} onClick={() => !isProcessingPayment && setShowPayment(false)}>
-          <div style={{ background: '#1a1a1a', borderRadius: 24, padding: 26, maxWidth: 420, width: '100%', border: `2px solid ${selectedColor}` }} onClick={e => e.stopPropagation()}>
-            <h2 style={{ color: 'white', fontSize: 22, textAlign: 'center', marginBottom: 18 }}>Finaliser l'achat</h2>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 14, background: '#0a0a0a', padding: 14, borderRadius: 12, marginBottom: 18 }}>
-              <img src={selectedTier.image} alt={selectedTier.name} draggable={false} style={{ width: 60, height: 90, objectFit: 'cover', borderRadius: 8 }} />
-              <div style={{ flex: 1 }}><p style={{ color: 'white', fontWeight: 'bold', fontSize: 18 }}>{selectedTier.name}</p><p style={{ color: 'gray', fontSize: 14 }}>{selectedTier.count} medias - {currentWeek?.name}</p></div>
-              <div style={{ color: selectedColor, fontSize: 26, fontWeight: 'bold' }}>{selectedTier.price}€</div>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.82)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 300, padding: isMobile ? 12 : 16 }} onClick={() => !isProcessingPayment && setShowPayment(false)}>
+          <div style={{ background: '#1a1a1a', borderRadius: isMobile ? 18 : 24, padding: isMobile ? 18 : 26, maxWidth: 420, width: '100%', border: `2px solid ${selectedColor}` }} onClick={e => e.stopPropagation()}>
+            <h2 style={{ color: 'white', fontSize: isMobile ? 18 : 22, textAlign: 'center', marginBottom: isMobile ? 14 : 18 }}>Finaliser l'achat</h2>
+            <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 10 : 14, background: '#0a0a0a', padding: isMobile ? 10 : 14, borderRadius: 12, marginBottom: isMobile ? 14 : 18 }}>
+              <img src={selectedTier.image} alt={selectedTier.name} draggable={false} style={{ width: isMobile ? 50 : 60, height: isMobile ? 75 : 90, objectFit: 'cover', borderRadius: 8 }} />
+              <div style={{ flex: 1 }}><p style={{ color: 'white', fontWeight: 'bold', fontSize: isMobile ? 14 : 18 }}>{selectedTier.name}</p><p style={{ color: 'gray', fontSize: isMobile ? 12 : 14 }}>{selectedTier.count} medias - {currentWeek?.name}</p></div>
+              <div style={{ color: selectedColor, fontSize: isMobile ? 20 : 26, fontWeight: 'bold' }}>{selectedTier.price}€</div>
             </div>
-            <button onClick={handleStripePayment} disabled={isProcessingPayment} style={{ width: '100%', padding: 14, background: `linear-gradient(135deg, ${selectedColor}, ${selectedColor}cc)`, border: 'none', borderRadius: 12, color: 'black', fontSize: 18, fontWeight: 'bold', cursor: isProcessingPayment ? 'not-allowed' : 'pointer', opacity: isProcessingPayment ? 0.7 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+            <button onClick={handleStripePayment} disabled={isProcessingPayment} style={{ width: '100%', padding: isMobile ? 12 : 14, background: `linear-gradient(135deg, ${selectedColor}, ${selectedColor}cc)`, border: 'none', borderRadius: 12, color: 'black', fontSize: isMobile ? 14 : 18, fontWeight: 'bold', cursor: isProcessingPayment ? 'not-allowed' : 'pointer', opacity: isProcessingPayment ? 0.7 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
               {isProcessingPayment ? 'Redirection...' : `💳 Payer ${selectedTier.price}€ par carte`}
             </button>
-            <button onClick={handleFakePayment} style={{ width: '100%', padding: 12, background: 'rgba(232,74,95,0.1)', border: '1px solid #E84A5F50', borderRadius: 12, color: '#E84A5F', fontSize: 13, cursor: 'pointer', marginTop: 10 }}>🧪 Test sans paiement (DEV)</button>
-            <button onClick={() => setShowPayment(false)} style={{ width: '100%', padding: 10, background: 'transparent', border: 'none', color: 'gray', fontSize: 14, cursor: 'pointer', marginTop: 8 }}>Annuler</button>
-            <div style={{ marginTop: 14, padding: 12, background: '#0a0a0a', borderRadius: 10, display: 'flex', alignItems: 'center', gap: 8, color: 'rgba(255,255,255,0.5)', fontSize: 12 }}>🔒 Paiement sécurisé par Stripe</div>
+            <button onClick={handleFakePayment} style={{ width: '100%', padding: isMobile ? 10 : 12, background: 'rgba(232,74,95,0.1)', border: '1px solid #E84A5F50', borderRadius: 12, color: '#E84A5F', fontSize: isMobile ? 11 : 13, cursor: 'pointer', marginTop: 10 }}>🧪 Test sans paiement (DEV)</button>
+            <button onClick={() => setShowPayment(false)} style={{ width: '100%', padding: isMobile ? 8 : 10, background: 'transparent', border: 'none', color: 'gray', fontSize: isMobile ? 12 : 14, cursor: 'pointer', marginTop: 8 }}>Annuler</button>
+            <div style={{ marginTop: isMobile ? 10 : 14, padding: isMobile ? 10 : 12, background: '#0a0a0a', borderRadius: 10, display: 'flex', alignItems: 'center', gap: 8, color: 'rgba(255,255,255,0.5)', fontSize: isMobile ? 10 : 12 }}>🔒 Paiement sécurisé par Stripe</div>
           </div>
         </div>
       )}
 
       {/* REVEAL */}
       {showReveal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 350, padding: 16 }}>
-          <div style={{ width: '100%', maxWidth: 480, background: '#141414', borderRadius: 24, padding: 18, border: `2px solid ${tiers.find(t => t.id === revealTier)!.color}80` }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-              <div><div style={{ color: 'white', fontWeight: 'bold', fontSize: 18 }}>Media debloque</div><div style={{ color: 'rgba(255,255,255,0.55)', fontSize: 12 }}>{revealIndex + 1} / {tiers.find(t => t.id === revealTier)!.count}</div></div>
-              <button onClick={() => setShowReveal(false)} style={{ padding: '8px 12px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.16)', background: 'transparent', color: 'white', cursor: 'pointer' }}>Fermer</button>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 350, padding: isMobile ? 10 : 16 }}>
+          <div style={{ width: '100%', maxWidth: isMobile ? '100%' : 480, background: '#141414', borderRadius: isMobile ? 16 : 24, padding: isMobile ? 12 : 18, border: `2px solid ${tiers.find(t => t.id === revealTier)!.color}80` }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: isMobile ? 8 : 10 }}>
+              <div><div style={{ color: 'white', fontWeight: 'bold', fontSize: isMobile ? 14 : 18 }}>Media debloque</div><div style={{ color: 'rgba(255,255,255,0.55)', fontSize: isMobile ? 10 : 12 }}>{revealIndex + 1} / {tiers.find(t => t.id === revealTier)!.count}</div></div>
+              <button onClick={() => setShowReveal(false)} style={{ padding: isMobile ? '6px 10px' : '8px 12px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.16)', background: 'transparent', color: 'white', cursor: 'pointer', fontSize: isMobile ? 12 : 14 }}>Fermer</button>
             </div>
-            <div style={{ borderRadius: 18, overflow: 'hidden', background: '#0b0b0b', marginBottom: 12 }} onContextMenu={e => e.preventDefault()}>
-              {revealUrl ? <img src={revealUrl} draggable={false} onContextMenu={e => e.preventDefault()} style={{ width: '100%', height: 'auto', display: 'block' }} /> : <div style={{ padding: 60, textAlign: 'center', color: 'rgba(255,255,255,0.6)' }}>Chargement…</div>}
+            <div style={{ borderRadius: isMobile ? 12 : 18, overflow: 'hidden', background: '#0b0b0b', marginBottom: isMobile ? 10 : 12 }} onContextMenu={e => e.preventDefault()}>
+              {revealUrl ? <img src={revealUrl} draggable={false} onContextMenu={e => e.preventDefault()} style={{ width: '100%', height: 'auto', display: 'block', maxHeight: isMobile ? '55vh' : 'none', objectFit: 'contain' }} /> : <div style={{ padding: isMobile ? 40 : 60, textAlign: 'center', color: 'rgba(255,255,255,0.6)' }}>Chargement…</div>}
             </div>
-            <div style={{ display: 'flex', gap: 10 }}>
-              <button onClick={() => { const item = itemsByTier[revealTier][revealIndex]; if (revealUrl) setBigView({ tier: revealTier, item, url: revealUrl, weekId: revealWeek }) }} style={{ flex: 1, padding: 14, borderRadius: 14, border: '1px solid rgba(255,255,255,0.16)', background: 'transparent', color: 'white', cursor: 'pointer', fontWeight: 'bold' }}>Agrandir</button>
-              <button onClick={revealNext} style={{ flex: 1, padding: 14, borderRadius: 14, border: 'none', background: `linear-gradient(135deg, ${tiers.find(t => t.id === revealTier)!.color}, ${tiers.find(t => t.id === revealTier)!.color}cc)`, color: 'black', cursor: 'pointer', fontWeight: 'bold' }}>Suivant</button>
+            <div style={{ display: 'flex', gap: isMobile ? 8 : 10 }}>
+              <button onClick={() => { const item = itemsByTier[revealTier][revealIndex]; if (revealUrl) setBigView({ tier: revealTier, item, url: revealUrl, weekId: revealWeek }) }} style={{ flex: 1, padding: isMobile ? 10 : 14, borderRadius: isMobile ? 10 : 14, border: '1px solid rgba(255,255,255,0.16)', background: 'transparent', color: 'white', cursor: 'pointer', fontWeight: 'bold', fontSize: isMobile ? 12 : 14 }}>Agrandir</button>
+              <button onClick={revealNext} style={{ flex: 1, padding: isMobile ? 10 : 14, borderRadius: isMobile ? 10 : 14, border: 'none', background: `linear-gradient(135deg, ${tiers.find(t => t.id === revealTier)!.color}, ${tiers.find(t => t.id === revealTier)!.color}cc)`, color: 'black', cursor: 'pointer', fontWeight: 'bold', fontSize: isMobile ? 12 : 14 }}>Suivant</button>
             </div>
           </div>
         </div>
@@ -401,38 +415,38 @@ function OffersContent() {
 
       {/* COLLECTION */}
       {showCollection && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.93)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 400, padding: 16 }} onClick={() => setShowCollection(false)}>
-          <div style={{ background: '#141414', borderRadius: 24, padding: 18, maxWidth: 920, width: '100%', border: `2px solid ${tiers.find(t => t.id === collectionTier)!.color}80`, maxHeight: '86vh', overflow: 'auto' }} onClick={e => e.stopPropagation()}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <div><div style={{ color: 'white', fontWeight: 'bold', fontSize: 20 }}>Ma collection</div><div style={{ color: 'rgba(255,255,255,0.55)', fontSize: 12 }}>Clique pour reveler, puis agrandir</div></div>
-              <button onClick={() => setShowCollection(false)} style={{ padding: '10px 14px', borderRadius: 14, border: '1px solid rgba(255,255,255,0.16)', background: 'transparent', color: 'white', cursor: 'pointer' }}>Fermer</button>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.93)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 400, padding: isMobile ? 8 : 16 }} onClick={() => setShowCollection(false)}>
+          <div style={{ background: '#141414', borderRadius: isMobile ? 16 : 24, padding: isMobile ? 12 : 18, maxWidth: 920, width: '100%', border: `2px solid ${tiers.find(t => t.id === collectionTier)!.color}80`, maxHeight: '90vh', overflow: 'auto' }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: isMobile ? 10 : 12 }}>
+              <div><div style={{ color: 'white', fontWeight: 'bold', fontSize: isMobile ? 16 : 20 }}>Ma collection</div><div style={{ color: 'rgba(255,255,255,0.55)', fontSize: isMobile ? 10 : 12 }}>Clique pour reveler, puis agrandir</div></div>
+              <button onClick={() => setShowCollection(false)} style={{ padding: isMobile ? '8px 10px' : '10px 14px', borderRadius: 14, border: '1px solid rgba(255,255,255,0.16)', background: 'transparent', color: 'white', cursor: 'pointer', fontSize: isMobile ? 12 : 14 }}>Fermer</button>
             </div>
-            <div style={{ marginBottom: 14 }}>
-              <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, marginBottom: 8 }}>SEMAINE</div>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <div style={{ marginBottom: isMobile ? 10 : 14 }}>
+              <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: isMobile ? 10 : 12, marginBottom: 8 }}>SEMAINE</div>
+              <div style={{ display: 'flex', gap: isMobile ? 6 : 8, flexWrap: 'wrap' }}>
                 {getPurchasedWeeks().map(wid => {
                   const w = allWeeks.find(x => x.id === wid)
-                  return <button key={wid} onClick={() => setCollectionWeek(wid)} style={{ padding: '8px 14px', borderRadius: 999, border: collectionWeek === wid ? '1px solid #E84A5F' : '1px solid rgba(255,255,255,0.14)', background: collectionWeek === wid ? '#E84A5F20' : 'transparent', color: collectionWeek === wid ? '#E84A5F' : 'rgba(255,255,255,0.7)', cursor: 'pointer', fontSize: 13 }}>{w?.name || wid}</button>
+                  return <button key={wid} onClick={() => setCollectionWeek(wid)} style={{ padding: isMobile ? '6px 10px' : '8px 14px', borderRadius: 999, border: collectionWeek === wid ? '1px solid #E84A5F' : '1px solid rgba(255,255,255,0.14)', background: collectionWeek === wid ? '#E84A5F20' : 'transparent', color: collectionWeek === wid ? '#E84A5F' : 'rgba(255,255,255,0.7)', cursor: 'pointer', fontSize: isMobile ? 11 : 13 }}>{w?.name || wid}</button>
                 })}
-                {!getPurchasedWeeks().length && <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13 }}>Aucun achat</div>}
+                {!getPurchasedWeeks().length && <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: isMobile ? 11 : 13 }}>Aucun achat</div>}
               </div>
             </div>
-            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 14 }}>
-              {tiers.map(t => <button key={t.id} onClick={() => isPurchased(t.id, collectionWeek) && setCollectionTier(t.id)} style={{ padding: '10px 16px', borderRadius: 999, border: collectionTier === t.id ? `1px solid ${t.color}` : '1px solid rgba(255,255,255,0.14)', background: collectionTier === t.id ? `${t.color}20` : 'transparent', color: isPurchased(t.id, collectionWeek) ? (collectionTier === t.id ? t.color : 'rgba(255,255,255,0.7)') : 'rgba(255,255,255,0.25)', cursor: isPurchased(t.id, collectionWeek) ? 'pointer' : 'not-allowed', opacity: isPurchased(t.id, collectionWeek) ? 1 : 0.55 }}>{t.name}</button>)}
+            <div style={{ display: 'flex', gap: isMobile ? 6 : 10, flexWrap: 'wrap', marginBottom: isMobile ? 10 : 14 }}>
+              {tiers.map(t => <button key={t.id} onClick={() => isPurchased(t.id, collectionWeek) && setCollectionTier(t.id)} style={{ padding: isMobile ? '8px 12px' : '10px 16px', borderRadius: 999, border: collectionTier === t.id ? `1px solid ${t.color}` : '1px solid rgba(255,255,255,0.14)', background: collectionTier === t.id ? `${t.color}20` : 'transparent', color: isPurchased(t.id, collectionWeek) ? (collectionTier === t.id ? t.color : 'rgba(255,255,255,0.7)') : 'rgba(255,255,255,0.25)', cursor: isPurchased(t.id, collectionWeek) ? 'pointer' : 'not-allowed', opacity: isPurchased(t.id, collectionWeek) ? 1 : 0.55, fontSize: isMobile ? 12 : 14 }}>{t.name}</button>)}
             </div>
             {!isPurchased(collectionTier, collectionWeek) ? (
-              <div style={{ padding: 18, borderRadius: 18, border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.6)', textAlign: 'center' }}>Pack non acheté pour cette semaine</div>
+              <div style={{ padding: isMobile ? 14 : 18, borderRadius: isMobile ? 12 : 18, border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.6)', textAlign: 'center', fontSize: isMobile ? 12 : 14 }}>Pack non acheté pour cette semaine</div>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 14 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(3, 1fr)' : 'repeat(auto-fill, minmax(140px, 1fr))', gap: isMobile ? 8 : 14 }}>
                 {itemsByTier[collectionTier].slice(0, tiers.find(t => t.id === collectionTier)!.count).map(item => {
                   const unlocked = isRevealed(collectionTier, item.id, collectionWeek)
                   return (
-                    <div key={item.id} onClick={() => clickCollectionItem(collectionTier, item, collectionWeek)} onContextMenu={e => e.preventDefault()} style={{ borderRadius: 16, border: '1px solid rgba(255,255,255,0.12)', background: '#0b0b0b', overflow: 'hidden', cursor: 'pointer' }}>
+                    <div key={item.id} onClick={() => clickCollectionItem(collectionTier, item, collectionWeek)} onContextMenu={e => e.preventDefault()} style={{ borderRadius: isMobile ? 10 : 16, border: '1px solid rgba(255,255,255,0.12)', background: '#0b0b0b', overflow: 'hidden', cursor: 'pointer' }}>
                       <div style={{ position: 'relative', width: '100%', aspectRatio: '3/4' }}>
                         <img src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/media-thumbs/${collectionWeek}/${collectionTier}/${item.n}.jpg`} style={{ width: '100%', height: '100%', objectFit: 'cover', filter: unlocked ? 'none' : 'blur(20px)', transform: unlocked ? 'none' : 'scale(1.1)' }} draggable={false} onContextMenu={e => e.preventDefault()} />
-                        {!unlocked && <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.4)' }}><div style={{ fontSize: 34 }}>🔒</div></div>}
+                        {!unlocked && <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.4)' }}><div style={{ fontSize: isMobile ? 24 : 34 }}>🔒</div></div>}
                       </div>
-                      <div style={{ padding: 10 }}><div style={{ color: 'white', fontWeight: 'bold', fontSize: 12, marginBottom: 4 }}>{item.title}</div><div style={{ color: tiers.find(t => t.id === collectionTier)!.color, fontSize: 11 }}>{collectionTier.toUpperCase()}</div></div>
+                      <div style={{ padding: isMobile ? 6 : 10 }}><div style={{ color: 'white', fontWeight: 'bold', fontSize: isMobile ? 10 : 12, marginBottom: 2 }}>{item.title}</div><div style={{ color: tiers.find(t => t.id === collectionTier)!.color, fontSize: isMobile ? 9 : 11 }}>{collectionTier.toUpperCase()}</div></div>
                     </div>
                   )
                 })}
@@ -444,19 +458,19 @@ function OffersContent() {
 
       {/* BIG VIEW */}
       {bigView && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 500, padding: 16 }} onClick={() => setBigView(null)}>
-          <div style={{ width: '100%', maxWidth: 520, background: '#121212', borderRadius: 22, padding: 16, border: `2px solid ${tiers.find(t => t.id === bigView.tier)!.color}80` }} onClick={e => e.stopPropagation()}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-              <div style={{ color: 'white', fontWeight: 'bold' }}>{bigView.item.title}</div>
-              <button onClick={() => setBigView(null)} style={{ padding: '8px 12px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.16)', background: 'transparent', color: 'white', cursor: 'pointer' }}>Fermer</button>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 500, padding: isMobile ? 8 : 16 }} onClick={() => setBigView(null)}>
+          <div style={{ width: '100%', maxWidth: isMobile ? '100%' : 520, background: '#121212', borderRadius: isMobile ? 14 : 22, padding: isMobile ? 10 : 16, border: `2px solid ${tiers.find(t => t.id === bigView.tier)!.color}80` }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: isMobile ? 8 : 10 }}>
+              <div style={{ color: 'white', fontWeight: 'bold', fontSize: isMobile ? 14 : 16 }}>{bigView.item.title}</div>
+              <button onClick={() => setBigView(null)} style={{ padding: isMobile ? '6px 10px' : '8px 12px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.16)', background: 'transparent', color: 'white', cursor: 'pointer', fontSize: isMobile ? 12 : 14 }}>Fermer</button>
             </div>
-            <div style={{ borderRadius: 18, overflow: 'hidden', background: '#0b0b0b', position: 'relative' }} onContextMenu={e => e.preventDefault()}>
-              <img src={bigView.url} draggable={false} onContextMenu={e => e.preventDefault()} style={{ width: '100%', height: 'auto', display: 'block' }} />
+            <div style={{ borderRadius: isMobile ? 12 : 18, overflow: 'hidden', background: '#0b0b0b', position: 'relative' }} onContextMenu={e => e.preventDefault()}>
+              <img src={bigView.url} draggable={false} onContextMenu={e => e.preventDefault()} style={{ width: '100%', height: 'auto', display: 'block', maxHeight: isMobile ? '70vh' : 'none', objectFit: 'contain' }} />
               <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
-                <div style={{ color: 'rgba(255,255,255,0.15)', fontSize: 24, fontWeight: 'bold', letterSpacing: 4, transform: 'rotate(-30deg)', textShadow: '0 0 10px rgba(0,0,0,0.5)', userSelect: 'none' }}>{username || 'MYPLATFORM'}</div>
+                <div style={{ color: 'rgba(255,255,255,0.15)', fontSize: isMobile ? 16 : 24, fontWeight: 'bold', letterSpacing: isMobile ? 2 : 4, transform: 'rotate(-30deg)', textShadow: '0 0 10px rgba(0,0,0,0.5)', userSelect: 'none' }}>{username || 'MYPLATFORM'}</div>
               </div>
-              <div style={{ position: 'absolute', top: 20, left: 20, color: 'rgba(255,255,255,0.08)', fontSize: 12, fontWeight: 'bold', letterSpacing: 2, pointerEvents: 'none', userSelect: 'none' }}>{username || 'MYPLATFORM'}</div>
-              <div style={{ position: 'absolute', bottom: 20, right: 20, color: 'rgba(255,255,255,0.08)', fontSize: 12, fontWeight: 'bold', letterSpacing: 2, pointerEvents: 'none', userSelect: 'none' }}>{username || 'MYPLATFORM'}</div>
+              <div style={{ position: 'absolute', top: isMobile ? 10 : 20, left: isMobile ? 10 : 20, color: 'rgba(255,255,255,0.08)', fontSize: isMobile ? 10 : 12, fontWeight: 'bold', letterSpacing: 2, pointerEvents: 'none', userSelect: 'none' }}>{username || 'MYPLATFORM'}</div>
+              <div style={{ position: 'absolute', bottom: isMobile ? 10 : 20, right: isMobile ? 10 : 20, color: 'rgba(255,255,255,0.08)', fontSize: isMobile ? 10 : 12, fontWeight: 'bold', letterSpacing: 2, pointerEvents: 'none', userSelect: 'none' }}>{username || 'MYPLATFORM'}</div>
             </div>
           </div>
         </div>
@@ -464,28 +478,28 @@ function OffersContent() {
 
       {/* ACCOUNT */}
       {showAccount && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 450, padding: 16 }} onClick={() => setShowAccount(false)}>
-          <div style={{ background: '#1a1a1a', borderRadius: 24, padding: 28, maxWidth: 400, width: '100%', border: '2px solid rgba(255,255,255,0.1)' }} onClick={e => e.stopPropagation()}>
-            <div style={{ textAlign: 'center', marginBottom: 24 }}>
-              <div style={{ width: 70, height: 70, borderRadius: '50%', background: 'linear-gradient(135deg, #E84A5F, #FF8C42)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px', fontSize: 28 }}>👤</div>
-              <div style={{ color: 'white', fontSize: 22, fontWeight: 'bold', marginBottom: 4 }}>{username}</div>
-              <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13 }}>Membre</div>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 450, padding: isMobile ? 12 : 16 }} onClick={() => setShowAccount(false)}>
+          <div style={{ background: '#1a1a1a', borderRadius: isMobile ? 18 : 24, padding: isMobile ? 20 : 28, maxWidth: 400, width: '100%', border: '2px solid rgba(255,255,255,0.1)' }} onClick={e => e.stopPropagation()}>
+            <div style={{ textAlign: 'center', marginBottom: isMobile ? 18 : 24 }}>
+              <div style={{ width: isMobile ? 56 : 70, height: isMobile ? 56 : 70, borderRadius: '50%', background: 'linear-gradient(135deg, #E84A5F, #FF8C42)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px', fontSize: isMobile ? 22 : 28 }}>👤</div>
+              <div style={{ color: 'white', fontSize: isMobile ? 18 : 22, fontWeight: 'bold', marginBottom: 4 }}>{username}</div>
+              <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: isMobile ? 11 : 13 }}>Membre</div>
             </div>
-            <div style={{ background: '#0d0d0d', borderRadius: 14, padding: 14, marginBottom: 20 }}>
-              <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, marginBottom: 10 }}>MES ACHATS</div>
-              {!purchases.length ? <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 13 }}>Aucun achat</div> : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ background: '#0d0d0d', borderRadius: isMobile ? 10 : 14, padding: isMobile ? 10 : 14, marginBottom: isMobile ? 14 : 20 }}>
+              <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: isMobile ? 10 : 12, marginBottom: isMobile ? 8 : 10 }}>MES ACHATS</div>
+              {!purchases.length ? <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: isMobile ? 11 : 13 }}>Aucun achat</div> : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? 6 : 8 }}>
                   {getPurchasedWeeks().map(wid => {
                     const w = allWeeks.find(x => x.id === wid)
                     const wp = purchases.filter(p => p.week_id === wid)
-                    return <div key={wid} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><span style={{ color: 'white', fontSize: 13 }}>{w?.name || wid}</span><div style={{ display: 'flex', gap: 6 }}>{wp.map(p => { const t = tiers.find(x => x.id === p.tier)!; return <span key={p.tier} style={{ background: t.color, color: 'black', padding: '2px 8px', borderRadius: 10, fontSize: 11, fontWeight: 'bold' }}>{t.name}</span> })}</div></div>
+                    return <div key={wid} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 4 }}><span style={{ color: 'white', fontSize: isMobile ? 11 : 13 }}>{w?.name || wid}</span><div style={{ display: 'flex', gap: 4 }}>{wp.map(p => { const t = tiers.find(x => x.id === p.tier)!; return <span key={p.tier} style={{ background: t.color, color: 'black', padding: isMobile ? '2px 6px' : '2px 8px', borderRadius: 10, fontSize: isMobile ? 9 : 11, fontWeight: 'bold' }}>{t.name}</span> })}</div></div>
                   })}
                 </div>
               )}
             </div>
-            <button onClick={handleLogout} style={{ width: '100%', padding: 14, borderRadius: 12, border: '1px solid rgba(255,255,255,0.15)', background: 'transparent', color: 'white', fontSize: 15, cursor: 'pointer', fontWeight: 'bold' }}>Se déconnecter</button>
-            <button onClick={resetMyData} style={{ width: '100%', padding: 14, borderRadius: 12, border: '1px solid #E84A5F50', background: 'rgba(232,74,95,0.1)', color: '#E84A5F', fontSize: 13, cursor: 'pointer', marginTop: 10 }}>🔄 Reset mes achats (DEV)</button>
-            <button onClick={() => setShowAccount(false)} style={{ width: '100%', padding: 12, background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 13, cursor: 'pointer', marginTop: 10 }}>Fermer</button>
+            <button onClick={handleLogout} style={{ width: '100%', padding: isMobile ? 12 : 14, borderRadius: 12, border: '1px solid rgba(255,255,255,0.15)', background: 'transparent', color: 'white', fontSize: isMobile ? 13 : 15, cursor: 'pointer', fontWeight: 'bold' }}>Se déconnecter</button>
+            <button onClick={resetMyData} style={{ width: '100%', padding: isMobile ? 12 : 14, borderRadius: 12, border: '1px solid #E84A5F50', background: 'rgba(232,74,95,0.1)', color: '#E84A5F', fontSize: isMobile ? 11 : 13, cursor: 'pointer', marginTop: 10 }}>🔄 Reset mes achats (DEV)</button>
+            <button onClick={() => setShowAccount(false)} style={{ width: '100%', padding: isMobile ? 10 : 12, background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: isMobile ? 11 : 13, cursor: 'pointer', marginTop: 10 }}>Fermer</button>
           </div>
         </div>
       )}

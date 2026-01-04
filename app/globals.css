@@ -40,3 +40,24 @@ h1, h2, h3, h4, h5, h6 {
 .tracking-premium {
   letter-spacing: 0.03em;
 }
+
+/* Mobile-first responsive utilities */
+@media (max-width: 768px) {
+  .mobile-stack {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  .mobile-center {
+    justify-content: center !important;
+    text-align: center !important;
+  }
+
+  .mobile-small-text {
+    font-size: 12px !important;
+  }
+
+  .mobile-hide {
+    display: none !important;
+  }
+}
