@@ -402,8 +402,20 @@ function OffersContent() {
               <div><div style={{ color: 'white', fontWeight: 'bold', fontSize: isMobile ? 14 : 18 }}>Media debloque</div><div style={{ color: 'rgba(255,255,255,0.55)', fontSize: isMobile ? 10 : 12 }}>{revealIndex + 1} / {tiers.find(t => t.id === revealTier)!.count}</div></div>
               <button onClick={() => setShowReveal(false)} style={{ padding: isMobile ? '6px 10px' : '8px 12px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.16)', background: 'transparent', color: 'white', cursor: 'pointer', fontSize: isMobile ? 12 : 14 }}>Fermer</button>
             </div>
-            <div style={{ borderRadius: isMobile ? 12 : 18, overflow: 'hidden', background: '#0b0b0b', marginBottom: isMobile ? 10 : 12 }} onContextMenu={e => e.preventDefault()}>
-              {revealUrl ? <img src={revealUrl} draggable={false} onContextMenu={e => e.preventDefault()} style={{ width: '100%', height: 'auto', display: 'block', maxHeight: isMobile ? '55vh' : 'none', objectFit: 'contain' }} /> : <div style={{ padding: isMobile ? 40 : 60, textAlign: 'center', color: 'rgba(255,255,255,0.6)' }}>Chargement…</div>}
+            <div style={{ borderRadius: isMobile ? 12 : 18, overflow: 'hidden', background: '#0b0b0b', marginBottom: isMobile ? 10 : 12, position: 'relative' }} onContextMenu={e => e.preventDefault()}>
+              {revealUrl ? (
+                <>
+                  <img src={revealUrl} draggable={false} onContextMenu={e => e.preventDefault()} style={{ width: '100%', height: 'auto', display: 'block', maxHeight: isMobile ? '55vh' : 'none', objectFit: 'contain' }} />
+                  {/* Watermarks */}
+                  <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden' }}>
+                    <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%) rotate(-30deg)', color: 'rgba(255,255,255,0.12)', fontSize: isMobile ? 18 : 28, fontWeight: 'bold', letterSpacing: 3, userSelect: 'none', whiteSpace: 'nowrap' }}>{username || 'MYPLATFORM'}</div>
+                    <div style={{ position: 'absolute', top: 15, left: 15, color: 'rgba(255,255,255,0.08)', fontSize: isMobile ? 8 : 10, fontWeight: 'bold', userSelect: 'none' }}>{username}</div>
+                    <div style={{ position: 'absolute', top: 15, right: 15, color: 'rgba(255,255,255,0.08)', fontSize: isMobile ? 8 : 10, fontWeight: 'bold', userSelect: 'none' }}>{username}</div>
+                    <div style={{ position: 'absolute', bottom: 15, left: 15, color: 'rgba(255,255,255,0.08)', fontSize: isMobile ? 8 : 10, fontWeight: 'bold', userSelect: 'none' }}>{username}</div>
+                    <div style={{ position: 'absolute', bottom: 15, right: 15, color: 'rgba(255,255,255,0.08)', fontSize: isMobile ? 8 : 10, fontWeight: 'bold', userSelect: 'none' }}>{username}</div>
+                  </div>
+                </>
+              ) : <div style={{ padding: isMobile ? 40 : 60, textAlign: 'center', color: 'rgba(255,255,255,0.6)' }}>Chargement…</div>}
             </div>
             <div style={{ display: 'flex', gap: isMobile ? 8 : 10 }}>
               <button onClick={() => { const item = itemsByTier[revealTier][revealIndex]; if (revealUrl) setBigView({ tier: revealTier, item, url: revealUrl, weekId: revealWeek }) }} style={{ flex: 1, padding: isMobile ? 10 : 14, borderRadius: isMobile ? 10 : 14, border: '1px solid rgba(255,255,255,0.16)', background: 'transparent', color: 'white', cursor: 'pointer', fontWeight: 'bold', fontSize: isMobile ? 12 : 14 }}>Agrandir</button>
@@ -466,11 +478,21 @@ function OffersContent() {
             </div>
             <div style={{ borderRadius: isMobile ? 12 : 18, overflow: 'hidden', background: '#0b0b0b', position: 'relative' }} onContextMenu={e => e.preventDefault()}>
               <img src={bigView.url} draggable={false} onContextMenu={e => e.preventDefault()} style={{ width: '100%', height: 'auto', display: 'block', maxHeight: isMobile ? '70vh' : 'none', objectFit: 'contain' }} />
-              <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
-                <div style={{ color: 'rgba(255,255,255,0.15)', fontSize: isMobile ? 16 : 24, fontWeight: 'bold', letterSpacing: isMobile ? 2 : 4, transform: 'rotate(-30deg)', textShadow: '0 0 10px rgba(0,0,0,0.5)', userSelect: 'none' }}>{username || 'MYPLATFORM'}</div>
+              {/* Multiple watermarks for leak protection */}
+              <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden' }}>
+                {/* Center diagonal watermark */}
+                <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%) rotate(-30deg)', color: 'rgba(255,255,255,0.13)', fontSize: isMobile ? 20 : 32, fontWeight: 'bold', letterSpacing: 4, userSelect: 'none', whiteSpace: 'nowrap', textShadow: '0 0 10px rgba(0,0,0,0.5)' }}>{username || 'MYPLATFORM'}</div>
+                {/* Corner watermarks */}
+                <div style={{ position: 'absolute', top: isMobile ? 10 : 20, left: isMobile ? 10 : 20, color: 'rgba(255,255,255,0.1)', fontSize: isMobile ? 9 : 11, fontWeight: 'bold', letterSpacing: 1, userSelect: 'none' }}>{username}</div>
+                <div style={{ position: 'absolute', top: isMobile ? 10 : 20, right: isMobile ? 10 : 20, color: 'rgba(255,255,255,0.1)', fontSize: isMobile ? 9 : 11, fontWeight: 'bold', letterSpacing: 1, userSelect: 'none' }}>{username}</div>
+                <div style={{ position: 'absolute', bottom: isMobile ? 10 : 20, left: isMobile ? 10 : 20, color: 'rgba(255,255,255,0.1)', fontSize: isMobile ? 9 : 11, fontWeight: 'bold', letterSpacing: 1, userSelect: 'none' }}>{username}</div>
+                <div style={{ position: 'absolute', bottom: isMobile ? 10 : 20, right: isMobile ? 10 : 20, color: 'rgba(255,255,255,0.1)', fontSize: isMobile ? 9 : 11, fontWeight: 'bold', letterSpacing: 1, userSelect: 'none' }}>{username}</div>
+                {/* Additional mid watermarks */}
+                <div style={{ position: 'absolute', top: '25%', left: '20%', transform: 'rotate(-25deg)', color: 'rgba(255,255,255,0.06)', fontSize: isMobile ? 12 : 16, fontWeight: 'bold', userSelect: 'none' }}>{username}</div>
+                <div style={{ position: 'absolute', top: '75%', right: '20%', transform: 'rotate(-25deg)', color: 'rgba(255,255,255,0.06)', fontSize: isMobile ? 12 : 16, fontWeight: 'bold', userSelect: 'none' }}>{username}</div>
+                <div style={{ position: 'absolute', top: '40%', right: '10%', transform: 'rotate(-25deg)', color: 'rgba(255,255,255,0.05)', fontSize: isMobile ? 10 : 14, fontWeight: 'bold', userSelect: 'none' }}>{username}</div>
+                <div style={{ position: 'absolute', bottom: '40%', left: '10%', transform: 'rotate(-25deg)', color: 'rgba(255,255,255,0.05)', fontSize: isMobile ? 10 : 14, fontWeight: 'bold', userSelect: 'none' }}>{username}</div>
               </div>
-              <div style={{ position: 'absolute', top: isMobile ? 10 : 20, left: isMobile ? 10 : 20, color: 'rgba(255,255,255,0.08)', fontSize: isMobile ? 10 : 12, fontWeight: 'bold', letterSpacing: 2, pointerEvents: 'none', userSelect: 'none' }}>{username || 'MYPLATFORM'}</div>
-              <div style={{ position: 'absolute', bottom: isMobile ? 10 : 20, right: isMobile ? 10 : 20, color: 'rgba(255,255,255,0.08)', fontSize: isMobile ? 10 : 12, fontWeight: 'bold', letterSpacing: 2, pointerEvents: 'none', userSelect: 'none' }}>{username || 'MYPLATFORM'}</div>
             </div>
           </div>
         </div>
