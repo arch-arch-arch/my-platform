@@ -83,11 +83,15 @@ function OffersContent() {
   const [collectionWeek, setCollectionWeek] = useState('week-1')
   const [bigView, setBigView] = useState<null | { tier: TierId; item: Item; url: string; weekId: string }>(null)
   const [username, setUsername] = useState<string | null>(null)
+  const [userEmail, setUserEmail] = useState<string | null>(null)
   const [showAccount, setShowAccount] = useState(false)
   const [urlCache, setUrlCache] = useState<Record<string, { url: string; ts: number }>>({})
 
   const selectedTier = tiers.find(t => t.id === selected)!
   const selectedColor = selectedTier.color
+
+  // Watermark identifier - always shows user's identity
+  const watermarkId = username || userEmail || userId?.slice(0, 8) || ''
 
   const isPurchased = (tier: TierId, weekId: string) => purchases.some(p => p.tier === tier && p.week_id === weekId)
   const isRevealed = (tier: TierId, mediaKey: string, weekId: string) => reveals.some(r => r.tier === tier && r.media_key === mediaKey && r.week_id === weekId)
@@ -136,13 +140,15 @@ function OffersContent() {
       if (!alive) return
       setIsAuthed(!!data.session)
       setUserId(data.session?.user?.id ?? null)
+      setUserEmail(data.session?.user?.email ?? null)
       if (data.session?.user?.id) loadAccess(data.session.user.id)
     })
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
       setIsAuthed(!!session)
       setUserId(session?.user?.id ?? null)
+      setUserEmail(session?.user?.email ?? null)
       if (session?.user?.id) loadAccess(session.user.id)
-      else { setPurchases([]); setReveals([]); setUsername(null) }
+      else { setPurchases([]); setReveals([]); setUsername(null); setUserEmail(null) }
     })
     return () => { alive = false; sub.subscription.unsubscribe() }
   }, [supabase])
@@ -408,11 +414,11 @@ function OffersContent() {
                   <img src={revealUrl} draggable={false} onContextMenu={e => e.preventDefault()} style={{ width: '100%', height: 'auto', display: 'block', maxHeight: isMobile ? '55vh' : 'none', objectFit: 'contain' }} />
                   {/* Watermarks */}
                   <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden' }}>
-                    <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%) rotate(-30deg)', color: 'rgba(255,255,255,0.12)', fontSize: isMobile ? 18 : 28, fontWeight: 'bold', letterSpacing: 3, userSelect: 'none', whiteSpace: 'nowrap' }}>{username || 'MYPLATFORM'}</div>
-                    <div style={{ position: 'absolute', top: 15, left: 15, color: 'rgba(255,255,255,0.08)', fontSize: isMobile ? 8 : 10, fontWeight: 'bold', userSelect: 'none' }}>{username}</div>
-                    <div style={{ position: 'absolute', top: 15, right: 15, color: 'rgba(255,255,255,0.08)', fontSize: isMobile ? 8 : 10, fontWeight: 'bold', userSelect: 'none' }}>{username}</div>
-                    <div style={{ position: 'absolute', bottom: 15, left: 15, color: 'rgba(255,255,255,0.08)', fontSize: isMobile ? 8 : 10, fontWeight: 'bold', userSelect: 'none' }}>{username}</div>
-                    <div style={{ position: 'absolute', bottom: 15, right: 15, color: 'rgba(255,255,255,0.08)', fontSize: isMobile ? 8 : 10, fontWeight: 'bold', userSelect: 'none' }}>{username}</div>
+                    <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%) rotate(-30deg)', color: 'rgba(255,255,255,0.12)', fontSize: isMobile ? 18 : 28, fontWeight: 'bold', letterSpacing: 3, userSelect: 'none', whiteSpace: 'nowrap' }}>{watermarkId}</div>
+                    <div style={{ position: 'absolute', top: 15, left: 15, color: 'rgba(255,255,255,0.08)', fontSize: isMobile ? 8 : 10, fontWeight: 'bold', userSelect: 'none' }}>{watermarkId}</div>
+                    <div style={{ position: 'absolute', top: 15, right: 15, color: 'rgba(255,255,255,0.08)', fontSize: isMobile ? 8 : 10, fontWeight: 'bold', userSelect: 'none' }}>{watermarkId}</div>
+                    <div style={{ position: 'absolute', bottom: 15, left: 15, color: 'rgba(255,255,255,0.08)', fontSize: isMobile ? 8 : 10, fontWeight: 'bold', userSelect: 'none' }}>{watermarkId}</div>
+                    <div style={{ position: 'absolute', bottom: 15, right: 15, color: 'rgba(255,255,255,0.08)', fontSize: isMobile ? 8 : 10, fontWeight: 'bold', userSelect: 'none' }}>{watermarkId}</div>
                   </div>
                 </>
               ) : <div style={{ padding: isMobile ? 40 : 60, textAlign: 'center', color: 'rgba(255,255,255,0.6)' }}>Chargement…</div>}
@@ -481,17 +487,17 @@ function OffersContent() {
               {/* Multiple watermarks for leak protection */}
               <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden' }}>
                 {/* Center diagonal watermark */}
-                <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%) rotate(-30deg)', color: 'rgba(255,255,255,0.13)', fontSize: isMobile ? 20 : 32, fontWeight: 'bold', letterSpacing: 4, userSelect: 'none', whiteSpace: 'nowrap', textShadow: '0 0 10px rgba(0,0,0,0.5)' }}>{username || 'MYPLATFORM'}</div>
+                <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%) rotate(-30deg)', color: 'rgba(255,255,255,0.13)', fontSize: isMobile ? 20 : 32, fontWeight: 'bold', letterSpacing: 4, userSelect: 'none', whiteSpace: 'nowrap', textShadow: '0 0 10px rgba(0,0,0,0.5)' }}>{watermarkId}</div>
                 {/* Corner watermarks */}
-                <div style={{ position: 'absolute', top: isMobile ? 10 : 20, left: isMobile ? 10 : 20, color: 'rgba(255,255,255,0.1)', fontSize: isMobile ? 9 : 11, fontWeight: 'bold', letterSpacing: 1, userSelect: 'none' }}>{username}</div>
-                <div style={{ position: 'absolute', top: isMobile ? 10 : 20, right: isMobile ? 10 : 20, color: 'rgba(255,255,255,0.1)', fontSize: isMobile ? 9 : 11, fontWeight: 'bold', letterSpacing: 1, userSelect: 'none' }}>{username}</div>
-                <div style={{ position: 'absolute', bottom: isMobile ? 10 : 20, left: isMobile ? 10 : 20, color: 'rgba(255,255,255,0.1)', fontSize: isMobile ? 9 : 11, fontWeight: 'bold', letterSpacing: 1, userSelect: 'none' }}>{username}</div>
-                <div style={{ position: 'absolute', bottom: isMobile ? 10 : 20, right: isMobile ? 10 : 20, color: 'rgba(255,255,255,0.1)', fontSize: isMobile ? 9 : 11, fontWeight: 'bold', letterSpacing: 1, userSelect: 'none' }}>{username}</div>
+                <div style={{ position: 'absolute', top: isMobile ? 10 : 20, left: isMobile ? 10 : 20, color: 'rgba(255,255,255,0.1)', fontSize: isMobile ? 9 : 11, fontWeight: 'bold', letterSpacing: 1, userSelect: 'none' }}>{watermarkId}</div>
+                <div style={{ position: 'absolute', top: isMobile ? 10 : 20, right: isMobile ? 10 : 20, color: 'rgba(255,255,255,0.1)', fontSize: isMobile ? 9 : 11, fontWeight: 'bold', letterSpacing: 1, userSelect: 'none' }}>{watermarkId}</div>
+                <div style={{ position: 'absolute', bottom: isMobile ? 10 : 20, left: isMobile ? 10 : 20, color: 'rgba(255,255,255,0.1)', fontSize: isMobile ? 9 : 11, fontWeight: 'bold', letterSpacing: 1, userSelect: 'none' }}>{watermarkId}</div>
+                <div style={{ position: 'absolute', bottom: isMobile ? 10 : 20, right: isMobile ? 10 : 20, color: 'rgba(255,255,255,0.1)', fontSize: isMobile ? 9 : 11, fontWeight: 'bold', letterSpacing: 1, userSelect: 'none' }}>{watermarkId}</div>
                 {/* Additional mid watermarks */}
-                <div style={{ position: 'absolute', top: '25%', left: '20%', transform: 'rotate(-25deg)', color: 'rgba(255,255,255,0.06)', fontSize: isMobile ? 12 : 16, fontWeight: 'bold', userSelect: 'none' }}>{username}</div>
-                <div style={{ position: 'absolute', top: '75%', right: '20%', transform: 'rotate(-25deg)', color: 'rgba(255,255,255,0.06)', fontSize: isMobile ? 12 : 16, fontWeight: 'bold', userSelect: 'none' }}>{username}</div>
-                <div style={{ position: 'absolute', top: '40%', right: '10%', transform: 'rotate(-25deg)', color: 'rgba(255,255,255,0.05)', fontSize: isMobile ? 10 : 14, fontWeight: 'bold', userSelect: 'none' }}>{username}</div>
-                <div style={{ position: 'absolute', bottom: '40%', left: '10%', transform: 'rotate(-25deg)', color: 'rgba(255,255,255,0.05)', fontSize: isMobile ? 10 : 14, fontWeight: 'bold', userSelect: 'none' }}>{username}</div>
+                <div style={{ position: 'absolute', top: '25%', left: '20%', transform: 'rotate(-25deg)', color: 'rgba(255,255,255,0.06)', fontSize: isMobile ? 12 : 16, fontWeight: 'bold', userSelect: 'none' }}>{watermarkId}</div>
+                <div style={{ position: 'absolute', top: '75%', right: '20%', transform: 'rotate(-25deg)', color: 'rgba(255,255,255,0.06)', fontSize: isMobile ? 12 : 16, fontWeight: 'bold', userSelect: 'none' }}>{watermarkId}</div>
+                <div style={{ position: 'absolute', top: '40%', right: '10%', transform: 'rotate(-25deg)', color: 'rgba(255,255,255,0.05)', fontSize: isMobile ? 10 : 14, fontWeight: 'bold', userSelect: 'none' }}>{watermarkId}</div>
+                <div style={{ position: 'absolute', bottom: '40%', left: '10%', transform: 'rotate(-25deg)', color: 'rgba(255,255,255,0.05)', fontSize: isMobile ? 10 : 14, fontWeight: 'bold', userSelect: 'none' }}>{watermarkId}</div>
               </div>
             </div>
           </div>
